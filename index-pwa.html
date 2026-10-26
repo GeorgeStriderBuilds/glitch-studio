@@ -125,8 +125,12 @@ button:active{transform:scale(.97)}
     <div class="acts"><label style="flex:1;font-size:14px;color:var(--mute)">Size <select id="txtSize"><option value="32">Small</option><option value="56" selected>Medium</option><option value="88">Large</option></select></label><label style="flex:1;font-size:14px;color:var(--mute)">Position <select id="txtPos"><option value="top">Top</option><option value="center">Center</option><option value="bottom" selected>Bottom</option></select></label><label style="flex:1;font-size:14px;color:var(--mute)">Colour <input type="color" id="txtColor" value="#ffffff" style="width:100%;min-height:44px"></label></div>
   </section>
   <section><h2>Animated export</h2>
-    <div class="acts"><button class="pri" id="saveAnim" style="flex:1">Save animated WebM (6 frames)</button></div>
-    <p style="font-size:13px;color:var(--mute);margin:8px 0 0">Records 6 frames, about 3 seconds, looping. Each frame changes the seed and adds a slice-shift pulse, so it moves even if your edit uses only mirror or color. This saves a WebM video, not a GIF. Open it in Chrome or a video player to see it move; some photo galleries only show the first frame.</p>
+    <p style="font-size:14px;margin:0 0 10px">Think of a video as a flipbook. One frame is one still picture. This makes 6 different glitch pictures, shows each one for half a second, then starts again from the first one. 6 pictures × 0.5 seconds = 3 seconds, looping, so it looks like the picture is glitching on its own.</p>
+    <div class="acts"><button id="genFrames" style="flex:1">Generate 6 random frames</button><button id="playFrames" style="flex:1" disabled>Play preview</button></div>
+    <div id="frameStrip" style="display:flex;gap:6px;margin-top:10px;overflow-x:auto"></div>
+    <p id="frameNote" style="font-size:13px;color:var(--mute);margin:8px 0 0">Step 1: Generate 6 random frames. Step 2: Play preview to watch them flip. Step 3: Save animation.</p>
+    <div class="acts" style="margin-top:10px"><button class="pri" id="saveAnim" style="flex:1">Save animation as video</button></div>
+    <p style="font-size:13px;color:var(--mute);margin:8px 0 0">Saves a WebM video, not a GIF. Open it in Chrome or a video player to see it move; some photo galleries only show the first frame.</p>
   </section>
   <!-- Mirror section -->
   <section><h2>Mirror</h2>
@@ -409,18 +413,62 @@ $('#save').onclick=function(){
  document.getElementById('txtColor').addEventListener('input',function(e){txtColor=e.target.value;draw()});
  document.getElementById('copyRecipe').addEventListener('click',function(){var r=JSON.stringify({settings:S,intensity:intensity,text:txtText,textSize:txtSize,textPos:txtPos,textColor:txtColor});navigator.clipboard.writeText(r).then(function(){$('#msg').textContent='Recipe copied. Paste it back with Paste recipe.'},function(){$('#msg').textContent='Copy failed. Recipe: '+r})});
  document.getElementById('pasteRecipe').addEventListener('click',function(){var r=prompt('Paste a Glitch Studio recipe (JSON):');if(!r)return;try{var o=JSON.parse(r);if(o.settings){S=Object.assign({},S0,o.settings);if(o.intensity)intensity=o.intensity;if(o.text!==undefined)txtText=o.text;if(o.textSize)txtSize=o.textSize;if(o.textPos)txtPos=o.textPos;if(o.textColor)txtColor=o.textColor;document.getElementById('txtText').value=txtText;sync();draw();push();$('#msg').textContent='Recipe applied.'}else{$('#msg').textContent='That recipe did not contain settings.'}}catch(e){$('#msg').textContent='Could not read that recipe.'}});
+ var animFrames=[],animPlayId=null,animIdx=0;
+ function makeRandomSettings(){
+  var R=function(a,b){return a+Math.floor(Math.random()*(b-a+1))},C=function(p){return Math.random()<p},m=['off','oi','ov','oq'][R(0,3)];
+  var n={mirror:m,mc:m==='off'?1:R(1,5),pos:R(15,110),kal:C(.4)?R(2,10):0,kr:R(0,360),blocks:C(.5)?R(10,60):0,bs:R(12,64),smear:C(.4)?R(5,50):0,sd:C(.5)?'h':'v',trails:C(.35)?R(2,6):0,td:R(5,25),ta:R(0,360),pix:C(.2)?R(4,20):0,wave:C(.3)?R(10,50):0,post:C(.15)?R(3,6):0,noise:C(.3)?R(5,30):0,scan:C(.25)?R(10,50):0,inv:C(.1)?'i':'n',hue:C(.6)?R(0,360):0,sat:R(80,200),seed:R(1,999999)};
+  var lockM=document.getElementById('lockMirror').checked,lockK=document.getElementById('lockKal').checked,lockMo=document.getElementById('lockMosh').checked,lockC=document.getElementById('lockColor').checked;
+  if(lockM){n.mirror=S.mirror;n.mc=S.mc;n.pos=S.pos}
+  if(lockK){n.kal=S.kal;n.kr=S.kr}
+  if(lockMo){n.blocks=S.blocks;n.bs=S.bs;n.smear=S.smear;n.sd=S.sd;n.trails=S.trails;n.td=S.td;n.ta=S.ta;n.pix=S.pix;n.wave=S.wave;n.post=S.post;n.noise=S.noise;n.scan=S.scan}
+  if(lockC){n.inv=S.inv;n.hue=S.hue;n.sat=S.sat}
+  return n;
+ }
+ function stopPreview(){if(animPlayId){clearInterval(animPlayId);animPlayId=null;document.getElementById('playFrames').textContent='Play preview'}}
+ document.getElementById('genFrames').addEventListener('click',function(){
+  if(!src){$('#msg').textContent='Choose a photo first.';return}
+  stopPreview();
+  var orig=JSON.parse(JSON.stringify(S));animFrames=[];
+  for(var i=0;i<6;i++){var ns=Object.assign({},orig,makeRandomSettings());animFrames.push(ns)}
+  var strip=document.getElementById('frameStrip');strip.innerHTML='';
+  animFrames.forEach(function(fr,idx){
+    S=JSON.parse(JSON.stringify(fr));render();
+    var im=document.createElement('img');im.src=cv.toDataURL('image/jpeg',0.7);im.alt='Frame '+(idx+1);im.style.cssText='width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--line);cursor:pointer';
+    im.onclick=function(){stopPreview();S=JSON.parse(JSON.stringify(fr));sync();draw();$('#frameNote').textContent='Showing frame '+(idx+1)+' of 6. Tap Play preview to flip through all 6.'};
+    strip.appendChild(im);
+  });
+  S=orig;sync();draw();
+  document.getElementById('playFrames').disabled=false;
+  document.getElementById('frameNote').textContent='6 random frames made. Tap any thumbnail to see that one still, or Play preview to watch all 6 flip, half a second each.';
+  $('#msg').textContent='6 frames generated.';
+ });
+ document.getElementById('playFrames').addEventListener('click',function(){
+  if(!animFrames.length){$('#msg').textContent='Generate 6 random frames first.';return}
+  if(animPlayId){stopPreview();return}
+  var orig=JSON.parse(JSON.stringify(S));animIdx=0;this.textContent='Stop preview';
+  var btn=this;
+  animPlayId=setInterval(function(){
+    S=JSON.parse(JSON.stringify(animFrames[animIdx]));sync();render();
+    document.getElementById('frameNote').textContent='Playing frame '+(animIdx+1)+' of 6. Each frame shows for half a second, then it loops.';
+    animIdx=(animIdx+1)%6;
+  },500);
+ });
  document.getElementById('saveAnim').addEventListener('click',function(){
   if(!src){$('#msg').textContent='Choose a photo first.';return}
   if(typeof MediaRecorder==='undefined'||!cv.captureStream){$('#msg').textContent='Animated export is not supported in this browser. Save a still image instead.';return}
+  if(!animFrames.length)document.getElementById('genFrames').click();
+  if(!animFrames.length)return;
+  stopPreview();
   var wasSplit=splitOn;if(wasSplit){splitOn=false}
+  var orig=JSON.parse(JSON.stringify(S));
   var stream=cv.captureStream(5),rec,parts=[];
   try{rec=new MediaRecorder(stream,{mimeType:'video/webm'})}catch(e){$('#msg').textContent='Animated export is not supported in this browser.';return}
   rec.ondataavailable=function(e){if(e.data.size)parts.push(e.data)};
-  rec.onstop=function(){var b=new Blob(parts,{type:'video/webm'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='glitch-animated-'+Date.now()+'.webm';document.body.appendChild(a);a.click();a.remove();$('#msg').textContent='Animated WebM saved. Open it in Chrome or a video player to see it move.';if(wasSplit){splitOn=true;draw()}};
-  rec.start();$('#msg').textContent='Recording animated export…';
-  var frames=0,origSeed=S.seed,origKr=S.kr;
-  animPulse=0;render();
-  var iv2=setInterval(function(){frames++;animPulse=frames;S.seed=origSeed+frames*7919;if(S.kal>=2)S.kr=origKr+frames*18;render();if(frames>=5){clearInterval(iv2);setTimeout(function(){animPulse=0;S.seed=origSeed;S.kr=origKr;render();rec.stop()},500)}},500);
+  rec.onstop=function(){var b=new Blob(parts,{type:'video/webm'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='glitch-animated-'+Date.now()+'.webm';document.body.appendChild(a);a.click();a.remove();S=orig;sync();draw();$('#msg').textContent='Animation saved as a WebM video. Open it in Chrome or a video player to see it move.';if(wasSplit){splitOn=true;draw()}};
+  rec.start();$('#msg').textContent='Saving animation…';
+  var fi=0;
+  S=JSON.parse(JSON.stringify(animFrames[0]));sync();render();
+  var iv2=setInterval(function(){fi++;if(fi>=6){clearInterval(iv2);setTimeout(function(){rec.stop()},500);return}S=JSON.parse(JSON.stringify(animFrames[fi]));sync();render();},500);
  });
 })();
 
