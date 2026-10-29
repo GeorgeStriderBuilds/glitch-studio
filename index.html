@@ -54,6 +54,7 @@ input[type=range]{width:100%;height:36px;accent-color:var(--accent);margin:0;tou
 #msg{font-size:13px;color:var(--mute);min-height:18px;margin-top:6px}
 [hidden]{display:none!important}
 #pick,#pick2{position:relative;overflow:hidden;display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-weight:600;cursor:pointer}
+#pick:focus-within,#pick2:focus-within{outline:3px solid var(--accent);outline-offset:2px}
 #pick2{flex:1;justify-content:center}
 #cmp{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 select{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;min-height:44px;width:100%;padding:0 10px;margin-top:6px}
@@ -248,7 +249,7 @@ body.sheet-hidden main{display:none}
   <div id="moreWrap"><button id="moreBtn" type="button">More controls</button><div id="moreControls"></div></div>
   </section>
   <div id="splitRow" hidden style="margin-bottom:12px"><label for="splitRange" style="font-size:14px;color:var(--mute)">Before / after divider</label><input type="range" id="splitRange" min="0" max="100" value="50" aria-label="Before and after divider position" style="width:100%"></div>
-  <div id="msg"></div>
+  <div id="msg" role="status" aria-live="polite"></div>
   <div id="fbx" hidden style="margin-bottom:12px"><img id="fb" alt="Your finished image" style="width:100%;border-radius:10px"></div>
   <section data-panel="save" hidden><h2>Save options</h2>
   <div class="acts" style="margin-bottom:12px"><label style="flex:1;font-size:14px;color:var(--mute)">Crop <select id="saveCrop" aria-label="Save crop"><option value="none">No crop</option><option value="1">1:1 square</option><option value="0.8">4:5 portrait</option><option value="0.5625">9:16 portrait</option></select></label></div>
@@ -792,9 +793,10 @@ $('#save').onclick=function(){
   var strip=document.getElementById('frameStrip');strip.innerHTML='';
   animFrames.forEach(function(fr,idx){
     S=JSON.parse(JSON.stringify(fr));render();
-    var im=document.createElement('img');im.src=cv.toDataURL('image/jpeg',0.7);im.alt='Frame '+(idx+1);im.style.cssText='width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--line);cursor:pointer';
-    im.onclick=function(){stopPreview();S=JSON.parse(JSON.stringify(fr));sync();draw();$('#frameNote').textContent='Showing frame '+(idx+1)+' of 6. Tap Play preview to flip through all 6.'};
-    strip.appendChild(im);
+    var btn=document.createElement('button');btn.type='button';btn.setAttribute('aria-label','Show frame '+(idx+1)+' of 6');btn.style.cssText='padding:0;border:0;background:none;cursor:pointer;border-radius:8px;line-height:0';
+    var im=document.createElement('img');im.src=cv.toDataURL('image/jpeg',0.7);im.alt='';im.setAttribute('aria-hidden','true');im.style.cssText='width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--line);display:block;pointer-events:none';
+    btn.onclick=function(){stopPreview();S=JSON.parse(JSON.stringify(fr));sync();draw();$('#frameNote').textContent='Showing frame '+(idx+1)+' of 6. Tap Play preview to flip through all 6.'};
+    btn.appendChild(im);strip.appendChild(btn);
   });
   S=orig;sync();draw();
   document.getElementById('playFrames').disabled=false;
