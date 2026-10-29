@@ -219,7 +219,7 @@ body.sheet-hidden main{display:none}
     <button id="themeBtn" type="button" aria-label="Toggle light and dark theme">Dark</button><button id="collapseBtn" type="button" aria-label="Hide or show photo preview">Hide preview</button><button id="fsBtn" type="button">Full screen</button>
     <label id="pick">Choose photo<input type="file" id="file" accept="image/*"></label>
   </div>
-  <div class="stage" id="stage"><div class="empty" id="empty">Pick a photo to start.<br>Everything stays on your phone.<br><button id="sampleBtn" type="button" style="margin-top:14px">Try a sample</button></div><canvas id="cv" hidden aria-label="Edited photo preview" role="img"></canvas></div>
+  <div class="stage" id="stage"><div class="empty" id="empty">The canvas is blank. The glitch is waiting.<br>Pick a photo and start corrupting it, beautifully.<br>Everything stays on your phone.<br><button id="sampleBtn" type="button" style="margin-top:14px">Try a sample</button></div><canvas id="cv" hidden aria-label="Edited photo preview" role="img"></canvas></div>
 </div>
 <button id="fsExit" type="button" hidden>Exit full screen</button>
 <button id="sheetExit" type="button" hidden>Show controls</button>
@@ -400,7 +400,7 @@ function currentRecipe(){return {settings:JSON.parse(JSON.stringify(S)),intensit
 function loadLooks(){try{var l=JSON.parse(localStorage.getItem('gs-my-looks'));return Array.isArray(l)?l.filter(function(x){return x&&x.name&&x.recipe&&x.recipe.settings;}):[];}catch(e){return [];}}
 function saveLooks(list){try{localStorage.setItem('gs-my-looks',JSON.stringify(list));}catch(e){$('#msg').textContent='Could not save that look on this device.';}}
 function applyLook(recipe){S=Object.assign({},S0,recipe.settings);if(!recipe.settings.brush)S.brush=[];if(recipe.intensity)intensity=recipe.intensity;if(recipe.text!==undefined)txtText=recipe.text;if(recipe.textSize)txtSize=recipe.textSize;if(recipe.textPos)txtPos=recipe.textPos;if(recipe.textColor)txtColor=recipe.textColor;document.getElementById('txtText').value=txtText;sync();draw();push();}
-function renderLooks(){var wrap=document.getElementById('myLooks');if(!wrap)return;wrap.innerHTML='';loadLooks().forEach(function(item){var b=document.createElement('button');b.textContent=item.name;b.onclick=function(){if(!src){$('#msg').textContent='Choose a photo first.';return;}applyLook(item.recipe);$('#msg').textContent='Look applied: '+item.name;};wrap.appendChild(b);});}
+function renderLooks(){var wrap=document.getElementById('myLooks');if(!wrap)return;wrap.innerHTML='';var looks=loadLooks();if(!looks.length){var h=document.createElement('p');h.style.cssText='font-size:13px;color:var(--mute);margin:0';h.textContent='No saved looks yet. Dial in something filthy, then hit Save this look.';wrap.appendChild(h);return;}looks.forEach(function(item){var b=document.createElement('button');b.textContent=item.name;b.onclick=function(){if(!src){$('#msg').textContent='Choose a photo first.';return;}applyLook(item.recipe);$('#msg').textContent='Look applied: '+item.name;};wrap.appendChild(b);});}
 $('#saveLook').onclick=function(){var list=loadLooks();if(list.length>=12){$('#msg').textContent='You already have 12 saved looks. Remove the last one first to save another.';return;}var name=prompt('Name this look:');if(!name)return;name=name.trim().slice(0,40);if(!name)return;list.push({name:name,recipe:currentRecipe()});saveLooks(list);renderLooks();$('#msg').textContent='Look saved: '+name;};
 $('#removeLook').onclick=function(){var list=loadLooks();if(!list.length){$('#msg').textContent='No saved looks to remove.';return;}var removed=list.pop();saveLooks(list);renderLooks();$('#msg').textContent='Removed saved look: '+removed.name;};
 renderLooks();
@@ -688,7 +688,7 @@ $('#save').onclick=function(){
  function fbk(why){$('#fb').src=out.toDataURL(mime,quality);$('#fbx').hidden=false;msg.textContent=why+' Press and hold the image below, then choose Download image.';/* #fbx is now a popover above the controls, so no scrolling is needed */}
  out.toBlob(function(b){
   if(!b){fbk('Save failed.');return}
-  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='glitch-'+Date.now()+'.'+ext;document.body.appendChild(a);a.click();a.remove();msg.textContent='Saved. Check your Downloads folder.';
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='glitch-'+Date.now()+'.'+ext;document.body.appendChild(a);a.click();a.remove();msg.textContent='Saved. Fresh glitch in your Downloads folder.';
   // iOS Save fallback: Safari often ignores a programmatic download click,
   // so on iOS also show the finished image below for a press-and-hold save.
   if(/iPad|iPhone|iPod/.test(navigator.userAgent)){ $('#fb').src=out.toDataURL(mime,quality);$('#fbx').hidden=false;msg.textContent='Saved. If no download appeared, press and hold the image below, then choose Save to Photos.'; }
@@ -721,7 +721,7 @@ $('#save').onclick=function(){
    try{
     if(!(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]}))){document.getElementById('save').click();return}
    }catch(e){msg.textContent='Sharing is not supported here. Use Save instead.';return}
-   navigator.share({files:[file],title:'Glitch Studio'}).then(function(){msg.textContent='Shared.'}).catch(function(err){
+   navigator.share({files:[file],title:'Glitch Studio'}).then(function(){msg.textContent='Shared. Spread the static.'}).catch(function(err){
     if(err&&err.name==='AbortError') return;
     msg.textContent='Share was not completed. Use Save instead.';
    });
@@ -925,7 +925,7 @@ function renderStack(){
  var active=STACK_ORDER.filter(isEffectActive);
  if(!active.length){
   var s=document.createElement('span');s.className='stack-empty';
-  s.textContent='No effects yet \u2014 tap one below.';
+  s.textContent='No effects yet. Tap one below.';
   bar.appendChild(s);
  } else {
   active.forEach(function(id){
