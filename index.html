@@ -6,9 +6,9 @@
 <title>Glitch Studio</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#04070d">
-<meta name="description" content="Glitch Studio: a free, single-file photo editor in your browser. Mirror, Kaleidoscope, Datamosh-style, Effects, Overlay, Color, RGB shift, slice shift, duotone, vignette, pixel sort, brush smear, fisheye, ASCII mosaic, polygon and grid warp. Your photos never leave your device.">
+<meta name="description" content="Glitch Studio: a free, single-file photo editor in your browser. Mirror, Kaleidoscope, Datamosh-style, Effects, Overlay, Color, RGB shift, slice shift, duotone, vignette, pixel sort, brush smear, fisheye, ASCII mosaic, polygon and grid warp. Seasonal: Blood Moon, Fog, Haunted. Your photos never leave your device.">
 <meta property="og:title" content="Glitch Studio">
-<meta property="og:description" content="A free browser photo editor: Mirror, Kaleidoscope, Datamosh-style, Effects, Overlay, Color, RGB shift, slice shift, duotone, vignette, pixel sort, brush smear, fisheye, ASCII mosaic, polygon and grid warp. No upload, no account.">
+<meta property="og:description" content="A free browser photo editor: Mirror, Kaleidoscope, Datamosh-style, Effects, Overlay, Color, RGB shift, slice shift, duotone, vignette, pixel sort, brush smear, fisheye, ASCII mosaic, polygon and grid warp. Seasonal: Blood Moon, Fog, Haunted. No upload, no account.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%237a2cf0'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EG%3C/text%3E%3C/svg%3E">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%237a2cf0'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EG%3C/text%3E%3C/svg%3E">
@@ -99,6 +99,9 @@ main{padding-bottom:96px}
 .effect-card span{font-size:12px;color:var(--mute);line-height:1.3}
 .effect-card.on{background:linear-gradient(135deg,#ff2e88,#00f0ff);color:#02131a;border-color:transparent}
 .effect-card.on span{color:#02131a}
+/* Seasonal: holiday effect rows live under this header. Future holidays
+   add their own rows here; the effect pipeline treats them like any effect. */
+.season-head{margin:16px 0 8px}
 .tool-row{display:flex;flex-wrap:wrap;gap:6px}
 .tool-row button{flex:1 1 30%}
 
@@ -236,6 +239,10 @@ body.sheet-hidden main{display:none}
 <div class="effect-row"><button class="effect-card" data-effect="psort"><b>Pixel sort</b><span>Sort pixels into streaks</span></button><button class="effect-card" data-effect="brush"><b>Brush smear</b><span>Drag paint around on the photo</span></button></div>
 <div class="effect-row"><button class="effect-card" data-effect="fish"><b>Fisheye</b><span>Radial warp from a point</span></button><button class="effect-card" data-effect="ascii"><b>ASCII mosaic</b><span>Rebuild from tiny characters</span></button></div>
 <div class="effect-row"><button class="effect-card" data-effect="poly"><b>Polygon</b><span>Angular faceted shards</span></button><button class="effect-card" data-effect="grid"><b>Grid warp</b><span>Warped grid and lines</span></button></div>
+<h2 class="season-head">Seasonal</h2>
+<!-- Seasonal: future holiday effect rows go here. -->
+<div class="effect-row"><button class="effect-card" data-effect="blood"><b>Blood Moon</b><span>Deep red grade, crushed blacks</span></button><button class="effect-card" data-effect="fog"><b>Fog</b><span>Drifting mist over the photo</span></button></div>
+<div class="effect-row"><button class="effect-card" data-effect="haunt"><b>Haunted</b><span>Cold grain and heavy shadow</span></button></div>
 </div></section>
   <div id="cycleBar"><button id="prevFx" type="button" aria-label="Previous effect">◀</button><span id="cycleName">Mirror</span><button id="nextFx" type="button" aria-label="Next effect">▶</button><button id="toolsBtn" type="button">Tools</button><button id="sheetBtn" type="button">Hide controls</button></div>
   <div id="fxStrip" role="tablist" aria-label="Effects"></div>
@@ -316,12 +323,15 @@ body.sheet-hidden main{display:none}
   <section data-effect-panel="ascii" hidden><h2>ASCII mosaic</h2><div id="g-ascii"></div></section>
   <section data-effect-panel="poly" hidden><h2>Polygon</h2><div id="g-poly"></div></section>
   <section data-effect-panel="grid" hidden><h2>Grid warp</h2><div id="g-grid"></div><div class="seg" id="gridmode" style="margin-top:8px"></div></section>
+  <section data-effect-panel="blood" hidden><h2>Blood Moon</h2><div id="g-blood"></div></section>
+  <section data-effect-panel="fog" hidden><h2>Fog</h2><div id="g-fog"></div></section>
+  <section data-effect-panel="haunt" hidden><h2>Haunted</h2><div id="g-haunt"></div></section>
 </main>
 <div class="bottombar"><button id="fsBtn2" type="button">Full screen</button><button id="undo" disabled>Undo</button><button id="redo" disabled>Redo</button><button class="pri" id="save">Save</button><button id="share" type="button" hidden>Share</button></div>
 <script>
 (function(){
 var $=function(s){return document.querySelector(s)};
-var S0={mirror:'off',mc:1,mcm:'sq',ovs:100,ovf:'n',kal:0,kr:0,pos:50,blocks:0,bs:32,smear:0,sd:'h',trails:0,td:10,ta:0,pix:0,wave:0,post:0,noise:0,scan:0,inv:'n',ovop:50,blend:'source-over',hue:0,sat:100,op:100,seed:1,rgb:0,slice:0,sliceH:24,duo:0,duoPal:'cyan',vig:0,psort:0,psortTh:40,psortDir:'h',brush:[],brushSize:48,brushStr:65,fish:0,fishCx:50,fishCy:50,ascii:0,asciiTile:12,poly:0,polySize:64,grid:0,gridSize:48,gridMode:'grid'};
+var S0={mirror:'off',mc:1,mcm:'sq',ovs:100,ovf:'n',kal:0,kr:0,pos:50,blocks:0,bs:32,smear:0,sd:'h',trails:0,td:10,ta:0,pix:0,wave:0,post:0,noise:0,scan:0,inv:'n',ovop:50,blend:'source-over',hue:0,sat:100,op:100,seed:1,rgb:0,slice:0,sliceH:24,duo:0,duoPal:'cyan',vig:0,psort:0,psortTh:40,psortDir:'h',brush:[],brushSize:48,brushStr:65,fish:0,fishCx:50,fishCy:50,ascii:0,asciiTile:12,poly:0,polySize:64,grid:0,gridSize:48,gridMode:'grid',blood:0,bloodGlow:50,fog:0,fogSpd:50,haunt:0};
 // S = current settings state (all sliders/segments). S0 = factory defaults. hist = undo history (JSON snapshots, max 60). redoStack = states undone by Undo, cleared by any new edit.
 var S=Object.assign({},S0);S.brush=[];var animPulse=0;var intensity=1,txtText='',txtSize=56,txtPos='bottom',txtColor='#ffffff';
 var hist=[JSON.stringify(S)],redoStack=[],src=null,ov=null,cmp=false,pend=false;
@@ -346,7 +356,10 @@ var SL={
  'g-fish':[['Fisheye strength','fish',0,100,'%'],['Centre X','fishCx',0,100,'%'],['Centre Y','fishCy',0,100,'%']],
  'g-ascii':[['ASCII amount','ascii',0,100,'%'],['Tile size','asciiTile',6,32,'px']],
  'g-poly':[['Polygon amount','poly',0,100,'%'],['Cell size','polySize',24,128,'px']],
- 'g-grid':[['Grid warp strength','grid',0,100,'%'],['Grid spacing','gridSize',20,120,'px']]
+ 'g-grid':[['Grid warp strength','grid',0,100,'%'],['Grid spacing','gridSize',20,120,'px']],
+ 'g-blood':[['Blood moon strength','blood',0,100,'%'],['Shadow glow','bloodGlow',0,100,'%']],
+ 'g-fog':[['Fog density','fog',0,100,'%'],['Drift speed','fogSpd',0,100,'%']],
+ 'g-haunt':[['Haunted strength','haunt',0,100,'%']]
 };
 var sliders={},btns={};
 Object.keys(SL).forEach(function(g){SL[g].forEach(function(d){
@@ -383,6 +396,7 @@ function sync(){
  $('#undo').disabled=hist.length<2;
  $('#redo').disabled=redoStack.length===0;
  renderStack();
+ syncFogLoop();
 }
 function push(){var j=JSON.stringify(S);if(j===hist[hist.length-1])return;hist.push(j);if(hist.length>60)hist.shift();redoStack=[];sync()}
 $('#undo').onclick=function(){if(hist.length<2)return;redoStack.push(hist.pop());S=JSON.parse(hist[hist.length-1]);sync();draw()};
@@ -408,6 +422,14 @@ $('#shuffle').onclick=function(){S.seed=(Math.random()*1e6)|0;draw();push()};
 function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function snap(W,H){tc.width=W;tc.height=H;tx.drawImage(wc,0,0)}
 function draw(){if(pend)return;pend=true;requestAnimationFrame(function(){pend=false;render()})}
+// --- Seasonal: Fog drift. A cached soft-noise tile drifts in two layers:
+// two drawImages per frame, paused when the tab is hidden. Reduced-motion
+// users get a static frame (the loop never starts for them).
+var fogPhase=0,fogTile=null,fogRunning=false,lastFogT=0;
+var reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function getFogTile(){if(fogTile)return fogTile;var t=document.createElement('canvas');t.width=t.height=320;var c=t.getContext('2d'),q=rng(4242);for(var i=0;i<48;i++){var x=q()*320,y=q()*320,r=34+q()*96,g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'rgba(255,255,255,'+(0.05+q()*0.09)+')');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,6.2832);c.fill()}fogTile=t;return t}
+function fogLoop(t){if(!fogRunning)return;if(!document.hidden&&S.fog>0){var dt=Math.min(0.1,((t-lastFogT)/1000)||0.016);lastFogT=t;fogPhase=(fogPhase+dt*(0.04+S.fogSpd/100*0.22))%1;draw()}requestAnimationFrame(fogLoop)}
+function syncFogLoop(){var want=S.fog>0&&!reducedMotion;if(want&&!fogRunning){fogRunning=true;lastFogT=performance.now();requestAnimationFrame(fogLoop)}else if(!want&&fogRunning){fogRunning=false}}
 function render(){
  if(!src)return;
  // Performance preview: edits render from the smaller preview source (max ~800px) so per-pixel effects stay fast; a full-size render is forced only on Save.
@@ -600,6 +622,41 @@ function render(){
  }
  if(ov){var ow=ov.width,oh=ov.height,kk=Math.max(W/ow,H/oh)*S.ovs/100,dw=ow*kk,dh=oh*kk;wx.save();wx.globalAlpha=S.ovop/100;wx.globalCompositeOperation=S.blend;if(S.ovf==='f'){wx.translate(W,0);wx.scale(-1,1)}wx.drawImage(ov,(W-dw)/2,(H-dh)/2,dw,dh);wx.restore()}
  if(S.vig>0){var vg=wx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.35,W/2,H/2,Math.max(W,H)*0.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,'+(S.vig/100*0.85)+')');wx.save();wx.fillStyle=vg;wx.fillRect(0,0,W,H);wx.restore()}
+ // --- Seasonal effects: Blood Moon, Fog, Haunted. Rendered after vignette,
+ // before the final colour pass, so hue/saturation still apply on top.
+ if(S.blood>0){
+  var idB=wx.getImageData(0,0,W,H),dB=idB.data,bs2=S.blood/100,bg2=S.bloodGlow/100;
+  for(var bI=0;bI<dB.length;bI+=4){
+   var lumB=(dB[bI]*0.299+dB[bI+1]*0.587+dB[bI+2]*0.114)/255;
+   var crush=Math.pow(lumB,1+bs2*0.9),cc2,f1,f2;
+   if(crush<0.5){f1=crush*2;cc2=[24+(150-24)*f1,5+(46-5)*f1,8+(34-8)*f1]}
+   else{f2=(crush-0.5)*2;cc2=[150+(255-150)*f2,46+(205-46)*f2,34+(175-34)*f2]}
+   for(var bC=0;bC<3;bC++)dB[bI+bC]=dB[bI+bC]*(1-bs2)+cc2[bC]*bs2;
+   dB[bI]+=(1-crush)*bg2*46*bs2;
+  }
+  wx.putImageData(idB,0,0);
+ }
+ if(S.haunt>0){
+  var idH=wx.getImageData(0,0,W,H),dH=idH.data,hs=S.haunt/100,qH=rng(S.seed+51),naH=hs*44;
+  for(var hI=0;hI<dH.length;hI+=4){
+   var lumH=dH[hI]*0.299+dH[hI+1]*0.587+dH[hI+2]*0.114,dAmt=hs*0.8,nv=(qH()-.5)*naH;
+   dH[hI]=dH[hI]*(1-dAmt)+lumH*0.90*dAmt+nv;
+   dH[hI+1]=dH[hI+1]*(1-dAmt)+lumH*0.97*dAmt+nv;
+   dH[hI+2]=dH[hI+2]*(1-dAmt)+lumH*1.14*dAmt+nv;
+  }
+  wx.putImageData(idH,0,0);
+  var vgH=wx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.30,W/2,H/2,Math.max(W,H)*0.72);
+  vgH.addColorStop(0,'rgba(2,4,12,0)');vgH.addColorStop(1,'rgba(2,4,12,'+(hs*0.92)+')');
+  wx.save();wx.fillStyle=vgH;wx.fillRect(0,0,W,H);wx.restore();
+ }
+ if(S.fog>0){
+  var tile=getFogTile(),fa=Math.min(0.5,S.fog/100*0.5);
+  var ox=(fogPhase*320)%320,oy=(fogPhase*140)%320;
+  wx.save();wx.globalCompositeOperation='screen';
+  wx.globalAlpha=fa;wx.drawImage(tile,-ox,-oy,W+320,H+320);
+  wx.globalAlpha=fa*0.55;wx.drawImage(tile,ox*1.6-160,oy*1.6-160,W*0.7+320,H*0.7+320);
+  wx.restore();
+ }
  cv.width=W;cv.height=H;cx.clearRect(0,0,W,H);
  cx.filter='hue-rotate('+S.hue+'deg) saturate('+S.sat+'%)';
  cx.globalAlpha=S.op/100;cx.drawImage(wc,0,0);cx.filter='none';cx.globalAlpha=1;
@@ -856,6 +913,9 @@ SIMPLE.fish={name:'Fisheye',looks:[['Gentle',{fish:30}],['Strong',{fish:65}],['E
 SIMPLE.ascii={name:'ASCII mosaic',looks:[['Fine',{ascii:100,asciiTile:8}],['Standard',{ascii:100,asciiTile:12}],['Chunky',{ascii:100,asciiTile:20}]],slider:{label:'Amount',min:0,max:100,unit:'%',get:function(){return S.ascii},set:function(v){S.ascii=v}},slider2:{label:'Tile size',min:6,max:32,unit:'px',get:function(){return S.asciiTile},set:function(v){S.asciiTile=v}}};
 SIMPLE.poly={name:'Polygon',looks:[['Fine',{poly:100,polySize:32}],['Standard',{poly:100,polySize:64}],['Large',{poly:100,polySize:112}]],slider:{label:'Amount',min:0,max:100,unit:'%',get:function(){return S.poly},set:function(v){S.poly=v}},slider2:{label:'Cell size',min:24,max:128,unit:'px',get:function(){return S.polySize},set:function(v){S.polySize=v}}};
 SIMPLE.grid={name:'Grid warp',looks:[['Grid',{grid:60,gridMode:'grid'}],['Lines',{grid:60,gridMode:'lines'}],['Warp',{grid:60,gridMode:'warp'}]],slider:{label:'Strength',min:0,max:100,unit:'%',get:function(){return S.grid},set:function(v){S.grid=v}},slider2:{label:'Spacing',min:20,max:120,unit:'px',get:function(){return S.gridSize},set:function(v){S.gridSize=v}}};
+SIMPLE.blood={name:'Blood Moon',looks:[['Full moon',{blood:100,bloodGlow:60}],['Ember',{blood:65,bloodGlow:30}],['Faint',{blood:30,bloodGlow:75}]],slider:{label:'Strength',min:0,max:100,unit:'%',get:function(){return S.blood},set:function(v){S.blood=v}},slider2:{label:'Shadow glow',min:0,max:100,unit:'%',get:function(){return S.bloodGlow},set:function(v){S.bloodGlow=v}}};
+SIMPLE.fog={name:'Fog',looks:[['Mist',{fog:35,fogSpd:40}],['Thick',{fog:75,fogSpd:25}],['Rolling',{fog:55,fogSpd:70}]],slider:{label:'Density',min:0,max:100,unit:'%',get:function(){return S.fog},set:function(v){S.fog=v}},slider2:{label:'Drift speed',min:0,max:100,unit:'%',get:function(){return S.fogSpd},set:function(v){S.fogSpd=v}}};
+SIMPLE.haunt={name:'Haunted',looks:[['Whisper',{haunt:35}],['Cold',{haunt:70}],['Full haunt',{haunt:100}]],slider:{label:'Strength',min:0,max:100,unit:'%',get:function(){return S.haunt},set:function(v){S.haunt=v}}};
 function effectPanels(){return document.querySelectorAll('section[data-effect-panel]')}
 function toolPanels(){return document.querySelectorAll('section[data-panel]')}
 var moreOn=false;
@@ -886,9 +946,10 @@ function showTool(id){
 // --- Stack iteration: active-state, stack bar, inline expansion, per-effect off ---
 // Stack order = first application in render(): mirror, kaleidoscope, datamosh
 // blocks/smear/trails, slice, effects pixel/wave, RGB shift, duotone, overlay,
-// vignette, then colour hue/saturation at the final draw. Effects itself spans
-// several stages; it is ordered by its first stage (pixel/wave).
-var STACK_ORDER=['mirror','kal','fish','poly','grid','mosh','slice','fx','rgb','psort','duo','ascii','brush','ov','vig','color'];
+// vignette, seasonal (blood moon, fog, haunted), then colour hue/saturation at
+// the final draw. Effects itself spans several stages; it is ordered by its
+// first stage (pixel/wave).
+var STACK_ORDER=['mirror','kal','fish','poly','grid','mosh','slice','fx','rgb','psort','duo','ascii','brush','ov','vig','blood','fog','haunt','color'];
 var expandedEffect=null;
 function isEffectActive(id){
  switch(id){
@@ -908,6 +969,9 @@ function isEffectActive(id){
   case 'ascii': return S.ascii>0;
   case 'poly': return S.poly>0;
   case 'grid': return S.grid>0;
+  case 'blood': return S.blood>0;
+  case 'fog': return S.fog>0;
+  case 'haunt': return S.haunt>0;
   default: return false;
  }
 }
@@ -942,7 +1006,7 @@ function renderStack(){
  if(typeof updateCycle==='function')updateCycle();
 }
 function clearEffect(id){
- var d={mirror:{mirror:'off',mc:1,mcm:'sq',pos:50},kal:{kal:0,kr:0},mosh:{blocks:0,bs:32,smear:0,sd:'h',trails:0,td:10,ta:0},fx:{pix:0,wave:0,post:0,noise:0,scan:0,inv:'n'},ov:{ovop:50,ovs:100,ovf:'n',blend:'source-over'},color:{hue:0,sat:100,op:100},rgb:{rgb:0},slice:{slice:0,sliceH:24},duo:{duo:0,duoPal:'cyan'},vig:{vig:0},psort:{psort:0,psortTh:40,psortDir:'h'},brush:{brush:[],brushSize:48,brushStr:65},fish:{fish:0,fishCx:50,fishCy:50},ascii:{ascii:0,asciiTile:12},poly:{poly:0,polySize:64},grid:{grid:0,gridSize:48,gridMode:'grid'}}[id];
+ var d={mirror:{mirror:'off',mc:1,mcm:'sq',pos:50},kal:{kal:0,kr:0},mosh:{blocks:0,bs:32,smear:0,sd:'h',trails:0,td:10,ta:0},fx:{pix:0,wave:0,post:0,noise:0,scan:0,inv:'n'},ov:{ovop:50,ovs:100,ovf:'n',blend:'source-over'},color:{hue:0,sat:100,op:100},rgb:{rgb:0},slice:{slice:0,sliceH:24},duo:{duo:0,duoPal:'cyan'},vig:{vig:0},psort:{psort:0,psortTh:40,psortDir:'h'},brush:{brush:[],brushSize:48,brushStr:65},fish:{fish:0,fishCx:50,fishCy:50},ascii:{ascii:0,asciiTile:12},poly:{poly:0,polySize:64},grid:{grid:0,gridSize:48,gridMode:'grid'},blood:{blood:0,bloodGlow:50},fog:{fog:0,fogSpd:50},haunt:{haunt:0}}[id];
  if(!d) return;
  Object.assign(S,d);
  if(id==='ov') ov=null;
@@ -1016,7 +1080,7 @@ document.getElementById('moreBtn').addEventListener('click',function(){moreOn=!m
 // Swipe-to-cycle was deliberately NOT used: it conflicts with the existing
 // drag-on-photo value control (a horizontal drag already changes the effect
 // value, and brush smear paints on drag). Arrows + strip cycle instead.
-var FX_ORDER=['mirror','kal','mosh','fx','ov','color','rgb','slice','duo','vig','psort','brush','fish','ascii','poly','grid'];
+var FX_ORDER=['mirror','kal','mosh','fx','ov','color','rgb','slice','duo','vig','psort','brush','fish','ascii','poly','grid','blood','fog','haunt'];
 function updateCycle(){
  var n=document.getElementById('cycleName');if(n)n.textContent=SIMPLE[simpleEffect]?SIMPLE[simpleEffect].name:simpleEffect;
  document.querySelectorAll('#fxStrip button').forEach(function(b){
